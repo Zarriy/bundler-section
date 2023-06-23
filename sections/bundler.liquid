@@ -1,0 +1,349 @@
+{{'bundler.css' | asset_url | stylesheet_tag }}
+
+<section class="bundler">
+    <h2>Bundler Section</h2>
+    <div class="bundler-container">
+     <div class="bundler-box images-container">
+      
+        <div class="imageBox imgBox-0">
+            <img src="https://cdn.shopify.com/s/files/1/0777/7019/5231/files/placeholder.png?v=1687359310" alt="imageBox" />
+            <p class="numberingTag">1/<span class="totalProductImages">1</span></p>
+        </div>
+      
+     </div>
+     
+    <div class="bundler-box">
+        <h2>Build Your Own Multiple Bundle</h2>
+        <div class="price-Box">
+        <p class="price">{{shop.currency}} 0</p>
+        <p class="comparePrice"></p>
+        </div>
+        
+        <div class="descriptionSections">
+            <div class="description-header">
+                <div class="tag active" data-target="hydration">Hydration</div>
+                <div class="tag" data-target="energy">Energy</div>
+                <div class="tag" data-target="kombucha">Kombucha</div>
+                <div class="tag" data-target="immune">Immune</div>
+                <div class="tag" data-target="sleep">Sleep</div>
+            </div>
+            <div class="descriptionBody">
+                <div class="paragraph" id="hydration">
+                    <p>Hydration Multiplier is a greate-tasting, Non-GMO electrolyte drink mix powered by Cellular Trasport Technology (CTT) to hydrate faster and more effeciently than water alone. 1 stickcontains 3x the electrolytes of traditional sports drinks with 5 essential vitamins.</p>
+                </div>
+                <div class="paragraph" id="energy">
+                    <p>Paragraph 2 content goes here.</p>
+                </div>
+                <div class="paragraph" id="kombucha">
+                    <p>Paragraph 3 content goes here.</p>
+                </div>
+                <div class="paragraph" id="immune">
+                    <p>Paragraph 4 content goes here.</p>
+                </div>
+                <div class="paragraph" id="sleep">
+                    <p>Paragraph 5 content goes here.</p>
+                </div>
+            </div>  
+
+        </div>
+
+
+        <form action="" id="bundlerForm">
+            <div class="outer-bar">
+            <div class="formParent" id="formParent">
+            <div class="selection-box">
+             <div class="bundler-hero">
+                <div class="bundler-inner-hero">
+                <h3>Build your bundle</h3>
+                <span class="bundle-size"><span class="bundle-size-updated">0</span> / 6 (up to 6)</span>
+            </div>
+                <p class="discount-message">Add <span class="discount-meter">4</span> more multipliers to unlock 10% off!</p>
+            </div>
+                <select name="product-0" id="select-field" data-id="0">
+                <option value="" disabled selected>Choose product</option> 
+                  {% for product in section.settings.product_list %} 
+                    {% if product.variants.size > 1 %}
+                        <option value="product-{{product.id}}" disabled>{{product.title}}</option>   
+                        {% for variant in product.variants %}
+                            <option value="variant-{{variant.id}}" class="variant"  data-variant-inventory-qty="{{ variant.inventory_quantity }}"  {% if variant.available == false %}disabled{% endif %} >&nbsp;&nbsp;{{variant.title}}</option>   
+                        {% endfor %}
+                    {% else %}
+                    <option value="product-{{product.id}}" data-variant-inventory-qty="{{ product.variants[0].inventory_quantity }}" {% if product.variants[0].available == false %}disabled{% endif %}>{{product.title}}</option>
+                    {% endif %}
+                  {% endfor %} 
+                </select>
+            </div>
+            </div>
+            <p class="errorMessage"></p>
+          
+            <button type="button" class="addMore--btn">+ Add Another</button>
+            </div>
+            <input type="button" value="Add to cart" >
+        </form>
+    </div>
+    </div>
+</section>
+ 
+
+ <script>
+
+    const priceEle = document.querySelector('.price');
+    const comparePrice = document.querySelector('.comparePrice');
+    const formParent = document.getElementById('formParent');
+    const addMoreBtn = document.querySelector('.addMore--btn');
+    const errorField = document.querySelector('.errorMessage');
+
+    const imagesContainer = document.querySelector('.images-container');
+    const data = {{section.settings.product_list | json }};
+    console.log(data)
+    const options = [{id: "", title: "Choose product", selected: true, disabled: true}, ...data]
+    const selectBox = document.querySelector(".selection-box");
+    const discountMessage = document.querySelector('.discount-message');
+    const discountMeter = document.querySelector('.discount-meter');
+   
+    selectBox.addEventListener('change', handleSelectChange);
+
+
+    let products = [];
+    let priceFilter = [];
+
+    function addMore(){
+        const childCount = formParent.childElementCount;
+        let selectChilds = document.querySelectorAll(".selection-box");
+        const isSelected = selectChilds[childCount -1].querySelector('select').value.length !== 0;
+        document.querySelectorAll('.totalProductImages').forEach(numbTag => numbTag.textContent = childCount + 1) ;
+
+        if(childCount < 6 && isSelected){ 
+        errorField.textContent = "";
+        const newDiv = document.createElement('div');
+        newDiv.className ="selection-box";
+       
+        const newSelect = document.createElement('select');
+        newSelect.name= `product-${childCount}`;
+        newSelect.id = 'select-field';
+        newSelect.dataset.id = childCount;
+
+        options.forEach((option, index) => {
+            if(option?.variants?.length > 1){
+                const newOption = document.createElement('option');
+                newOption.value = option.id;
+                newOption.textContent = option.title;
+                newOption.disabled = true;
+                newSelect.appendChild(newOption); 
+
+                option.variants.forEach((variant, index) => {
+                    const varOption = document.createElement('option');
+                    varOption.value= `variant-${variant.id}`;
+                    varOption.innerHTML = `&nbsp;&nbsp; ${variant.title}`;
+                    variant.available ? '' : varOption.disabled = true;
+                    varOption.setAttribute('data-rel', 'variant')
+                    newSelect.appendChild(varOption)
+                    
+                })
+                 
+            }else{
+                const newOption = document.createElement('option');
+                 newOption.value = `product-${option.id}`;
+                 newOption.textContent = option.title;
+                  if(option?.variants){
+                    option.variants[0].available ? '' : newOption.disabled = true;
+                  }else{
+                    newOption.disabled = option.disabled;
+                  }
+                 newOption.selected = option.selected;
+                newOption.setAttribute('data-rel', 'product')
+                 newSelect.appendChild(newOption);
+            }     
+        })
+
+        newSelect.onchange = handleSelectChange;
+
+        newDiv.appendChild(newSelect);
+        formParent.appendChild(newDiv);
+
+        imagesContainer.classList.add('multiple');
+        const imageDiv = document.createElement('div');
+        imageDiv.className = `imageBox imgBox-${childCount} carousel-cell`;
+        const newImg = document.createElement('img');
+        newImg.src= "https://cdn.shopify.com/s/files/1/0777/7019/5231/files/placeholder.png?v=1687359310";
+        newImg.alt="image box";
+        imageDiv.appendChild(newImg);
+        const numbering = document.createElement('p');
+        numbering.innerHTML = `${childCount + 1} / <span class="totalProductImages">${childCount + 1}</span>`;
+        numbering.className = "numberingTag";
+        imageDiv.appendChild(numbering)
+        imagesContainer.appendChild(imageDiv)
+
+    }else{
+            errorField.textContent = 'Please choose the product in the above box first'
+    }
+
+        if(childCount === 5) addMoreBtn.disabled = 'true';
+       
+    }
+
+    function handleSelectChange(e){
+        const checker = e.target.value.split('-');
+        const idUn = e.target.dataset.id;
+        const imgComp = document.querySelector(`.imgBox-${idUn}`).querySelector('img');
+        let selectedProduct = data.find(product => product.id == checker[1]);
+        products[idUn] = selectedProduct?.variants[0].id
+        priceFilter[idUn] = selectedProduct?.variants[0].price
+        if(checker[0] === 'variant'){ 
+            selectedProduct = data.find(product => {
+                return product.variants.find(vari => vari.id == checker[1])
+            }) 
+            products[idUn] = checker[1]
+           const selectedVariant = data.map(product => product.variants.find(vari => vari.id == checker[1])).find(variant => variant !== undefined);
+            priceFilter[idUn] = selectedVariant.price;
+            console.log(selectedVariant)
+        }
+        imgComp.src =  `https:${selectedProduct.featured_image}`
+        const totalPrice = priceFilter.reduce((price, acu) => price + acu, 0);
+        var currencyFormat = window.themeVariables.settings.currencyCodeEnabled ? window.themeVariables.settings.moneyWithCurrencyFormat : window.themeVariables.settings.moneyFormat;
+        priceEle.textContent = (formatMoney(totalPrice, currencyFormat));
+
+        // for updating number of products
+         document.querySelector('.bundle-size-updated').textContent = products.length;
+
+          if(products.length < 4){
+            discountMeter.textContent = 4 - products.length
+             }else if(products.length < 6){
+                discountMessage.textContent = `Add ${6 - products.length} more multipliers to unlock 15% off!`
+                priceEle.textContent = (formatMoney(totalPrice * 0.9, currencyFormat));
+                comparePrice.textContent = (formatMoney(totalPrice, currencyFormat));
+            }else{
+                discountMessage.textContent = 'Congrats, You have availed 15% discount on your entire bundle.'
+                priceEle.textContent = (formatMoney(totalPrice * 0.85, currencyFormat));
+                comparePrice.textContent = (formatMoney(totalPrice, currencyFormat));
+            }
+    }
+
+    function handleSubmit(e){
+        e.preventDefault()
+        if(!products.length){
+             errorField.textContent = "You haven't selected any product yet."
+        }
+        const formData = {
+            items: products.map(prod => {
+            return {
+                quantity: 1, 
+                id: Number(prod)
+            }
+        })
+        }
+        console.log(formData)
+        fetch(window.Shopify.routes.root + 'cart/add.js', {
+        method: 'POST',
+        headers: {
+              'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+        })
+        .then(response => {
+            document.dispatchEvent(new CustomEvent("cart:refresh"));
+            document.querySelector('a[href="/cart"]').click()
+            return response.json();
+        }).then(data => {
+            console.log(data)
+        }
+        ).catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    addMoreBtn.addEventListener('click', addMore)
+    document.querySelector('input[type="button"]').addEventListener('click', handleSubmit)
+
+
+// code for description section
+
+// Get all the tags
+const tags = document.querySelectorAll('.tag');
+const pragraphs = document.querySelectorAll('.paragraph');
+tags.forEach(tag => {
+  tag.addEventListener('click', () => {
+    const target = tag.getAttribute('data-target');
+    const paragraph = document.getElementById(target);
+    pragraphs.forEach(para => para.style.display = 'none');
+    tags.forEach(tag => tag.classList.remove('active'));
+    tag.classList.add('active')
+//toggle visibilitye
+    paragraph.style.display = paragraph.style.display === 'none' ? 'block' : 'none';
+  });
+});
+
+	
+
+// currency formatter 
+function formatMoney(cents, format = "") {
+  if (typeof cents === "string") {
+    cents = cents.replace(".", "");
+  }
+  const placeholderRegex = /\{\{\s*(\w+)\s*\}\}/, formatString = format || window.themeVariables.settings.moneyFormat;
+  function defaultTo(value2, defaultValue) {
+    return value2 == null || value2 !== value2 ? defaultValue : value2;
+  }
+  function formatWithDelimiters(number, precision, thousands, decimal) {
+    precision = defaultTo(precision, 2);
+    thousands = defaultTo(thousands, ",");
+    decimal = defaultTo(decimal, ".");
+    if (isNaN(number) || number == null) {
+      return 0;
+    }
+    number = (number / 100).toFixed(precision);
+    let parts = number.split("."), dollarsAmount = parts[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + thousands), centsAmount = parts[1] ? decimal + parts[1] : "";
+    return dollarsAmount + centsAmount;
+  }
+  let value = "";
+  switch (formatString.match(placeholderRegex)[1]) {
+    case "amount":
+      value = formatWithDelimiters(cents, 2);
+      break;
+    case "amount_no_decimals":
+      value = formatWithDelimiters(cents, 0);
+      break;
+    case "amount_with_space_separator":
+      value = formatWithDelimiters(cents, 2, " ", ".");
+      break;
+    case "amount_with_comma_separator":
+      value = formatWithDelimiters(cents, 2, ".", ",");
+      break;
+    case "amount_with_apostrophe_separator":
+      value = formatWithDelimiters(cents, 2, "'", ".");
+      break;
+    case "amount_no_decimals_with_comma_separator":
+      value = formatWithDelimiters(cents, 0, ".", ",");
+      break;
+    case "amount_no_decimals_with_space_separator":
+      value = formatWithDelimiters(cents, 0, " ");
+      break;
+    case "amount_no_decimals_with_apostrophe_separator":
+      value = formatWithDelimiters(cents, 0, "'");
+      break;
+  }
+  if (formatString.indexOf("with_comma_separator") !== -1) {
+    return formatString.replace(placeholderRegex, value);
+  } else {
+    return formatString.replace(placeholderRegex, value);
+  }
+}
+
+
+ </script>
+
+{% schema %}
+{
+    "name": "bundler", 
+    "tag": "section", 
+    "settings": [{
+     "type": "product_list",
+     "id": "product_list",
+     "label": "Products",
+    "limit": 6
+}], 
+    "presets": [{
+        "name": "Bundler Section"
+    }] 
+}
+{% endschema %}   
